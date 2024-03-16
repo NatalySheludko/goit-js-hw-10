@@ -4,8 +4,7 @@ import "flatpickr/dist/flatpickr.min.css";
 import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
-let userSelectedDate = null;
-let time = null;
+let userDate = 0;
 
 const dateInput = document.querySelector("#datetime-picker");
 const startClick = document.querySelector("[data-start]");
@@ -14,6 +13,8 @@ const clockHours = document.querySelector("[data-hours]");
 const clockMinutes = document.querySelector("[data-minutes]");
 const clockSeconds = document.querySelector("[data-seconds]");
 
+startClick.disabled = true;
+
 const options = {
   enableTime: true,
   time_24hr: true,
@@ -21,14 +22,11 @@ const options = {
   minuteIncrement: 1,
 
   onClose(selectedDates) {
-    const currentDate = new Date();
-    const userDate = selectedDates[0];
+   const userSelectedDate = selectedDates[0];
+    userDate = userSelectedDate.getTime();
 
-    if (userDate > currentDate) {
-      userSelectedDate = userDate.getTime();
-    } else {
-      disableButton();
-
+    if (userDate < new Date()) {
+      startClick.disabled = true;
       iziToast.show({
         position: "topRight",
         close: false,
@@ -36,26 +34,28 @@ const options = {
         backgroundColor: "#ff544b",
         message: "❌ Please choose a date in the future",
       });
+    } else {
+      startClick.disabled = false;
     }
   },
 };
 
 flatpickr("input#datetime-picker", options);
 
-startClick.addEventListener("click", disableButton);
-
-function disableButton() {
+startClick.addEventListener("click", () => {
   startClick.disabled = true;
   dateInput.disabled = true;
-}
 
-startClick.addEventListener("click", () => {
   const intervalId = setInterval(() => {
-    const currentDate = Date.now();
-    const diff = userSelectedDate - currentDate;
-    time = convertMs(diff);
+    const diff = userDate - Date.now();
+    const time = convertMs(diff);
 
     addLeadingZero(time);
+
+    if (diff < 1000) {
+      clearInterval(intervalId);
+      dateInput.disabled = false;
+    }
   }, 1000);
 });
 
@@ -71,10 +71,6 @@ function convertMs(ms) {
 
   return { days, hours, minutes, seconds };
 }
-
-console.log(convertMs(2000));
-console.log(convertMs(140000));
-console.log(convertMs(24140000));
 
 function addLeadingZero(time) {
   clockDays.textContent = time.days.toString().padStart(2, "0");

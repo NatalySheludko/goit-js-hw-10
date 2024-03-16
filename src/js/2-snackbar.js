@@ -10,7 +10,7 @@ timeInterval.addEventListener("input", () => {
 let selectedState = null;
 const radioState = document.querySelectorAll('[name="state"]');
 radioState.forEach(radio => {
-  radio.addEventListener("click", () => {
+  radio.addEventListener("change", () => {
     selectedState = radio.value;
   });
 });
@@ -18,28 +18,28 @@ radioState.forEach(radio => {
 function createPromise() {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (selectedState === "fulfilled") {
-        resolve(
-          iziToast.show({
-            messageColor: "white",
-            backgroundColor: "#34c683",
-            position: "topRight",
-            close: false,
-            message: `✅ Fulfilled promise in ${timeDelay} ms`,
-          })
-        );
-      } else {
-        reject(
-          iziToast.show({
-            messageColor: "white",
-            backgroundColor: "#ff544b",
-            position: "topRight",
-            close: false,
-            message: `❌ Rejected promise in ${timeDelay} ms`,
-          })
-        );
-      }
+      selectedState === "fulfilled" ? resolve() : reject();
     }, timeDelay);
+  });
+}
+
+function onFulfilled() {
+  iziToast.show({
+    messageColor: "white",
+    backgroundColor: "#34c683",
+    position: "topRight",
+    close: false,
+    message: `✅ Fulfilled promise in ${timeDelay} ms`,
+  });
+}
+
+function onRejected() {
+  iziToast.show({
+    messageColor: "white",
+    backgroundColor: "#ff544b",
+    position: "topRight",
+    close: false,
+    message: `❌ Rejected promise in ${timeDelay} ms`,
   });
 }
 
@@ -49,6 +49,7 @@ submitData.addEventListener("submit", handleSubmit);
 function handleSubmit(event) {
   event.preventDefault();
 
-  createPromise();
+  createPromise().then(onFulfilled).catch(onRejected);
+
   submitData.reset();
 }
